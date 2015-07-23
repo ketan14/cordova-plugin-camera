@@ -440,7 +440,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     !this.correctOrientation) {
                 writeUncompressedImage(uri);
 
-                this.callbackContext.success(uri.toString());
+                //this.callbackContext.success(uri.toString());
+                this.callbackContext.success(getRealPathFromURI(uri));;
             } else {
                 if(croppedUri != null) {
                     bitmap = getScaledBitmap(FileHelper.stripFileProtocol(croppedUri.toString()));
@@ -474,7 +475,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
 
                 // Send Uri back to JavaScript for viewing image
-                this.callbackContext.success(uri.toString());
+                //this.callbackContext.success(uri.toString());
+                this.callbackContext.success(getRealPathFromURI(uri));;
 
             }
         } else {
@@ -551,14 +553,16 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // If you ask for video or all media type you will automatically get back a file URI
         // and there will be no attempt to resize any returned data
         if (this.mediaType != PICTURE) {
-            this.callbackContext.success(uri.toString());
+            //this.callbackContext.success(uri.toString());
+            this.callbackContext.success(getRealPathFromURI(uri));
         }
         else {
             // This is a special case to just return the path as no scaling,
             // rotating, nor compressing needs to be done
             if (this.targetHeight == -1 && this.targetWidth == -1 &&
                     (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation) {
-                this.callbackContext.success(uri.toString());
+                //this.callbackContext.success(uri.toString());
+                this.callbackContext.success(getRealPathFromURI(uri));
             } else {
                 String uriString = uri.toString();
                 // Get the path to the image. Makes loading so much easier.
@@ -609,14 +613,16 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                             String modifiedPath = this.ouputModifiedBitmap(bitmap, uri);
                             // The modified image is cached by the app in order to get around this and not have to delete you
                             // application cache I'm adding the current system time to the end of the file url.
-                            this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
+                            //this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
+                            this.callbackContext.success(getRealPathFromURI(uri));
                         } catch (Exception e) {
                             e.printStackTrace();
                             this.failPicture("Error retrieving image.");
                         }
                     }
                     else {
-                        this.callbackContext.success(uri.toString());
+                        //this.callbackContext.success(uri.toString());
+                        this.callbackContext.success(getRealPathFromURI(uri));;
                     }
                 }
                 if (bitmap != null) {
@@ -1093,5 +1099,22 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
     public void onScanCompleted(String path, Uri uri) {
         this.conn.disconnect();
+    }
+    
+        /**
+     * change for URI to PATH.
+     *
+     * @param err
+     */
+    public String getRealPathFromURI(Uri contentUri) {
+        String res = null;
+        String[] proj = { MediaStore.Images.Media.DATA };
+        Cursor cursor = cordova.getActivity().getContentResolver().query(contentUri, proj, null, null, null);
+        if(cursor.moveToFirst()){;
+           int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+           res = cursor.getString(column_index);
+        }
+        cursor.close();
+        return res;
     }
 }
